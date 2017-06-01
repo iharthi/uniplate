@@ -15,6 +15,8 @@ parser.add_argument("-o", "--outdir", help="Output directory", default=".")
 parser.add_argument("-v", "--verbosity", action="count", default=0, help="Be verbose")
 parser.add_argument("-n", "--naming", default=None, type=str, help="File naming pattern, like {field1}_{field2}")
 parser.add_argument("-s", "--sheet", default=[], type=str, action='append', help="Sheet to process (can occur more than once)")
+parser.add_argument("-e", "--skip-empty", default=False, action='store_true', help="Skip empty values in key:value columns")
+parser.add_argument("-f", "--fill-with-last", default=False, action='store_true', help="Fill key:value columns with last pair instead of blank ")
 parser.parse_args()
 
 args = parser.parse_args()
@@ -44,7 +46,27 @@ def template_string(string, name, text):
     """Substitutes {name} to text in the string"""
     if args.verbosity > 4:
         print(string)
-    return string.replace("{"+name+"}", text)
+    if isinstance(text, str):
+        return string.replace("{"+name+"}", text)
+    elif isinstance(text, list):
+        for i in range(len(text)):
+            string = string.replace("{" + name + "::key::" + str(i) + "}", text[i][0])
+            string = string.replace("{" + name + "::value::" + str(i) + "}", text[i][1])
+        while "{" + name + "::key::" in string:
+            start = string.index("{" + name + "::key::")
+            end = string.index("}", start)+1
+            if args.fill_with_last:
+                string = string[:start] + text[-1][0] + string[end:]
+            else:
+                string = string[:start] + string[end:]
+        while "{" + name + "::value::" in string:
+            start = string.index("{" + name + "::value::")
+            end = string.index("}", start)+1
+            if args.fill_with_last:
+                string = string[:start] + text[-1][1] + string[end:]
+            else:
+                string = string[:start] + string[end:]
+    return string
 
 
 def template_node(node, name, text):
@@ -54,7 +76,8 @@ def template_node(node, name, text):
         for n in node.childNodes:
             template_node(n, name, text)
     if hasattr(node, 'data'):
-        if "{" + name + "}" in node.data:
+        if isinstance(text, str) and "{" + name + "}" in node.data or \
+                        isinstance(text, list) and ("{" + name + "::key::" in node.data or "{" + name + "::value::"):
             node.data = template_string(node.data, name, text)
 
 
@@ -68,17 +91,17 @@ def template(node, name, text):
 def load_template():
     """Tries to load a template, exits if the template is corrupted or not existing"""
     try:
-        template_object = odf.opendocument.load(args.template)
+        my_template_object = odf.opendocument.load(args.template)
     except zipfile.BadZipFile:
         print(
             "{} is not a valid zip archive (which means it's also not a .ods document for sure)".format(args.template))
         exit()
 
-    if template_object.mimetype != 'application/vnd.oasis.opendocument.graphics':
+    if my_template_object.mimetype != 'application/vnd.oasis.opendocument.graphics':
         print("{} is not an Open Document Chart".format(args.table))
         exit()
 
-    return template_object
+    return my_template_object
 
 
 # Fool protection
@@ -151,6 +174,18 @@ for sheet in table_object.spreadsheet.getElementsByType(odf.table.Table):
                 value = cells[i]
             except IndexError:
                 value = ""
+            if '::' in header[i]:
+                # Key-value column
+                try:
+                    name, key = header[i].split('::')
+                    if name not in row_dictionary:
+                        row_dictionary[name] = []
+                    if not args.skip_empty or value != "":
+                        row_dictionary[name].append((key, value))
+                    continue # Prevent processing as a regular column
+                except ValueError:
+                    pass # Will process as a regular column
+            # Regular column
             row_dictionary[header[i]] = value
         if args.verbosity > 2:
             print(row_dictionary)
@@ -158,7 +193,6 @@ for sheet in table_object.spreadsheet.getElementsByType(odf.table.Table):
 
 if args.verbosity > 1:
     print("Table loaded")
-
 
 # Template and save each row
 
