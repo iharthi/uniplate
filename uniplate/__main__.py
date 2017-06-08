@@ -1,1 +1,1 @@
-import template
+import uniplate.template
