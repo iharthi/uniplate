@@ -17,9 +17,9 @@ parser.add_argument("-e", "--skip-empty", default=False, action='store_true',
                     help="Skip empty values in key:value columns")
 parser.add_argument("-f", "--fill-with-last", default=False, action='store_true',
                     help="Fill key:value columns with last pair instead of blank ")
-parser.add_argument("--table-loader", default="uniplate_engine", type=str,
+parser.add_argument("--table-loader", default="uniplate.uniplate_engine", type=str,
                     help="Table loader module (default is uniplate_engine")
-parser.add_argument("--templater", default="uniplate_engine", type=str,
+parser.add_argument("--templater", default="uniplate.uniplate_engine", type=str,
                     help="Templater module (default is uniplate_engine")
 parser.parse_args()
 

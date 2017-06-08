@@ -68,10 +68,13 @@ class Templater(uniplate_engine.Templater):
         if 'mark' in row:
             if len(row['mark']) - 1 > 21:
                 # Second page active
+                # Remove the big Z
                 for line in self.template_object.getElementsByType(odf.draw.Line):
                     if 'bigZ_' in line.getAttribute('name'):
                         line.parentNode.removeChild(line)
             else:
+                # Second page inactive
+                # Remove the mark placeholders
                 erase = []
                 for i in range(21,42):
                     erase.append("mark::key::"+str(i)+"")

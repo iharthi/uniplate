@@ -169,6 +169,7 @@ class Templater(BaseTemplater):
         """Tries to load a template, exits if the template is corrupted or not existing"""
         self.args = args
         self.naming = naming
+        self.save_callback = self.save
 
     def reload_template(self):
         my_template_object = None
@@ -252,10 +253,13 @@ class Templater(BaseTemplater):
         if self.args.verbosity > 0:
             print("Saving {}".format(path))
 
-        self.template_object.save(path)
+        self.save_callback(path)
 
     def preprocess_file(self, row):
         pass
 
     def postprocess_file(self, row):
         pass
+
+    def save(self, path):
+        self.template_object.save(path)
