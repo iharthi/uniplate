@@ -9,18 +9,13 @@ and `python3`.
 
 ## Installation
 
-* Step 1: get the script
+`pip install https://github.com/iharthi/uniplate/archive/master.zip`
 
-    `git clone https://github.com/iharthi/uniplate.git uniplate`
-
-* Step 2: install required module(s)
-
-    `pip install -r uniplate/requirements.txt `
 
 
 ## Basic usage
 
-`uniplate.py template.odg table.ods`
+`python -m uniplate template.odg table.ods`
 
 The script takes all sheets in the table spreadsheet file and interprets first row of each sheet as a header containing
 field names. It will then create a copy of template file for each row, and substitute any template field marks with the
@@ -29,7 +24,7 @@ respective value for the row. The template field marks consist of field name in 
 
 ## More complex usage
 
-`uniplate.py [-h] [-o OUTDIR] [-v] [-n NAMING] [-s SHEET] template table`
+`python -m uniplate [-h] [-o OUTDIR] [-v] [-n NAMING] [-s SHEET] template table`
 
 positional arguments:
 
