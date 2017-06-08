@@ -8,4 +8,7 @@ setup(name='uniplate',
       author_email='kovalskii@gmail.com',
       license='BSD 3-clause',
       packages=['uniplate'],
+      install_requires=[
+            'odfpy',
+      ],
       zip_safe=False)
